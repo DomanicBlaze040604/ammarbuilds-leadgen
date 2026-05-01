@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadGen Pro — AmmarBuilds</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .source-badge { @apply text-xs px-2 py-0.5 rounded-full font-medium; }
+    .score-ring {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+      border: 3px solid;
+      flex-shrink: 0;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+    .lead-card { transition: transform 0.15s, box-shadow 0.15s; }
+    .lead-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans" x-data="leadgen()" x-init="init()">
+
+  <!-- HEADER -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-gray-900 text-sm leading-tight">LeadGen Pro</h1>
+          <p class="text-xs text-gray-400">by AmmarBuilds</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-500 hidden sm:block">28 sources · max leads</span>
+        <button @click="showHistory = !showHistory"
+          class="text-xs text-indigo-600 hover:text-indigo-800 font-medium border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+          📋 History
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- SEARCH FORM -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-1">Find Your Next Client</h2>
+      <p class="text-sm text-gray-500 mb-5">
+        Searches <span class="font-semibold text-indigo-600">28 sources</span> simultaneously —
+        Google Maps, JustDial, IndiaMART, Instagram, Facebook, LinkedIn, Meta Ads, YouTube, Yelp, TripAdvisor, Naukri, Zomato, Practo, and more.
+        Prioritises businesses with <span class="font-semibold text-green-600">no website</span>.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Industry / Niche</label>
+          <input x-model="form.industry" @keydown.enter="generate()"
+            placeholder="e.g. restaurant, gym, salon, dental, coaching..."
+            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">City / Location</label>
+          <input x-model="form.city" @keydown.enter="generate()"
+            placeholder="e.g. Mumbai, Delhi, Bangalore, Dubai..."
+            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        </div>
+        <div class="flex items-end">
+          <button @click="generate()" :disabled="loading"
+            class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold px-8 py-3 rounded-xl transition-colors text-sm flex items-center gap-2 justify-center">
+            <template x-if="!loading">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </template>
+            <template x-if="loading">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+            </template>
+            <span x-text="loading ? 'Scanning...' : 'Find Leads'"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- QUICK PRESETS -->
+      <div class="mt-4 flex flex-wrap gap-2">
+        <span class="text-xs text-gray-400 mt-1">Quick:</span>
+        <template x-for="preset in presets">
+          <button @click="applyPreset(preset)"
+            class="text-xs px-3 py-1 bg-gray-100 hover:bg-indigo-100 hover:text-indigo-700 rounded-full transition-colors text-gray-600">
+            <span x-text="preset.label"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <!-- PROGRESS / STATUS -->
+    <div x-show="loading || status === 'processing'" x-cloak class="bg-white rounded-2xl border border-indigo-100 p-6 mb-6 shadow-sm">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="pulse-dot"></div>
+        <span class="font-semibold text-gray-800">Scanning all 28 sources simultaneously...</span>
+      </div>
+      <div class="space-y-2">
+        <template x-for="src in sources">
+          <div class="flex items-center gap-3 text-sm">
+            <div class="w-2 h-2 rounded-full"
+              :class="src.done ? 'bg-green-500' : 'bg-gray-300 animate-pulse'"></div>
+            <span :class="src.done ? 'text-gray-700' : 'text-gray-400'" x-text="src.name"></span>
+            <span x-show="src.done" class="text-xs text-green-600">✓</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div x-show="leads.length > 0" x-cloak>
+
+      <!-- STATS BAR -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap gap-6">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-gray-900" x-text="leads.length"></div>
+              <div class="text-xs text-gray-500">Total Leads</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-600" x-text="noWebsiteCount"></div>
+              <div class="text-xs text-gray-500">No Website ⭐</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600" x-text="withPhoneCount"></div>
+              <div class="text-xs text-gray-500">With Phone</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-purple-600" x-text="highScoreCount"></div>
+              <div class="text-xs text-gray-500">Score 70+</div>
+            </div>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button @click="filterNoWebsite = !filterNoWebsite"
+              :class="filterNoWebsite ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'"
+              class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:opacity-90">
+              ⭐ No Website Only
+            </button>
+            <button @click="filterWithPhone = !filterWithPhone"
+              :class="filterWithPhone ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
+              class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:opacity-90">
+              📞 With Phone
+            </button>
+            <button @click="exportCSV()"
+              class="text-xs px-3 py-1.5 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+              ⬇ Export CSV
+            </button>
+            <button @click="getActionPlan()"
+              :disabled="aiLoading"
+              class="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-600 text-white hover:bg-violet-700 disabled:bg-violet-300 transition-colors">
+              🤖 AI Action Plan
+            </button>
+          </div>
+        </div>
+
+        <!-- SOURCE BREAKDOWN -->
+        <div class="mt-4 flex flex-wrap gap-2">
+          <template x-for="[src, count] in sourceBreakdown">
+            <div class="flex items-center gap-1.5 bg-gray-50 rounded-full px-3 py-1 text-xs">
+              <span class="font-medium text-gray-600" x-text="src"></span>
+              <span class="bg-gray-200 text-gray-700 rounded-full px-1.5 font-bold" x-text="count"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- LEAD CARDS -->
+      <div class="space-y-3">
+        <template x-for="lead in filteredLeads" :key="lead.id">
+          <div class="lead-card bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
+            :class="lead.contacted ? 'opacity-60 border-green-200 bg-green-50' : ''">
+            <div class="flex items-start gap-4">
+
+              <!-- SCORE RING -->
+              <div class="score-ring shrink-0"
+                :class="{
+                  'border-green-500 text-green-600 bg-green-50': lead.score >= 70,
+                  'border-amber-500 text-amber-600 bg-amber-50': lead.score >= 40 && lead.score < 70,
+                  'border-gray-300 text-gray-500 bg-gray-50': lead.score < 40
+                }"
+                x-text="lead.score">
+              </div>
+
+              <!-- MAIN INFO -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2 flex-wrap">
+                  <div>
+                    <h3 class="font-semibold text-gray-900 text-sm" x-text="lead.name"></h3>
+                    <p class="text-xs text-gray-500 mt-0.5" x-text="lead.address"></p>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap shrink-0">
+                    <!-- SOURCE BADGE -->
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      :class="sourceBadgeClass(lead.source)"
+                      x-text="lead.source"></span>
+                    <!-- CONTACTED -->
+                    <button @click="markContacted(lead)"
+                      x-show="!lead.contacted"
+                      class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700 transition-colors">
+                      Mark contacted
+                    </button>
+                    <span x-show="lead.contacted" class="text-xs text-green-600 font-medium">✓ Contacted</span>
+                  </div>
+                </div>
+
+                <!-- CONTACT ROW -->
+                <div class="mt-2 flex flex-wrap gap-3 text-xs">
+                  <template x-if="lead.phone">
+                    <a :href="'tel:' + lead.phone"
+                      class="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium">
+                      📞 <span x-text="lead.phone"></span>
+                    </a>
+                  </template>
+                  <template x-if="lead.email">
+                    <a :href="'mailto:' + lead.email"
+                      class="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium">
+                      ✉ <span x-text="lead.email"></span>
+                    </a>
+                  </template>
+                  <template x-if="lead.website">
+                    <a :href="lead.website" target="_blank"
+                      class="flex items-center gap-1 text-gray-600 hover:text-gray-800">
+                      🌐 <span class="truncate max-w-[180px]" x-text="lead.website"></span>
+                    </a>
+                  </template>
+                  <template x-if="!lead.website">
+                    <span class="flex items-center gap-1 text-green-600 font-semibold">
+                      ⭐ No website — pitch them!
+                    </span>
+                  </template>
+                  <template x-if="lead.rating > 0">
+                    <span class="text-amber-600">★ <span x-text="lead.rating.toFixed(1)"></span></span>
+                  </template>
+                </div>
+
+                <!-- SIGNALS -->
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  <template x-for="sig in parseSignals(lead.signals)">
+                    <span class="text-xs px-2 py-0.5 rounded-full"
+                      :class="signalClass(sig)"
+                      x-text="sig"></span>
+                  </template>
+                </div>
+
+                <!-- NOTES -->
+                <template x-if="lead.notes">
+                  <p class="mt-2 text-xs text-gray-400 italic truncate" x-text="lead.notes"></p>
+                </template>
+              </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
+              <template x-if="lead.phone">
+                <a :href="'https://wa.me/91' + lead.phone.replace(/\D/g, '').slice(-10) + '?text=' + encodeURIComponent(whatsappMsg(lead))"
+                  target="_blank"
+                  class="text-xs px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
+                  💬 WhatsApp
+                </a>
+              </template>
+              <template x-if="lead.phone">
+                <a :href="'tel:' + lead.phone"
+                  class="text-xs px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                  📞 Call
+                </a>
+              </template>
+              <template x-if="lead.email">
+                <a :href="'mailto:' + lead.email + '?subject=' + encodeURIComponent(emailSubject(lead)) + '&body=' + encodeURIComponent(emailBody(lead))"
+                  class="text-xs px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors">
+                  ✉ Email
+                </a>
+              </template>
+              <a :href="'https://www.google.com/search?q=' + encodeURIComponent(lead.name + ' ' + lead.address)"
+                target="_blank"
+                class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                🔍 Google
+              </a>
+              <button @click="getScript(lead)"
+                class="text-xs px-3 py-1.5 bg-violet-500 hover:bg-violet-600 text-white rounded-lg font-medium transition-colors">
+                🤖 AI Script
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <!-- EMPTY STATE -->
+        <div x-show="filteredLeads.length === 0 && leads.length > 0" class="text-center py-12 text-gray-400">
+          <p class="text-lg mb-1">No leads match your current filters.</p>
+          <button @click="filterNoWebsite = false; filterWithPhone = false" class="text-indigo-600 text-sm hover:underline">Clear filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI SCRIPT MODAL -->
+    <div x-show="showScript" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showScript = false">
+      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-gray-900">🤖 AI-Generated Script</h3>
+          <button @click="showScript = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <div x-show="aiLoading" class="text-center py-8">
+          <svg class="w-8 h-8 animate-spin mx-auto text-violet-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+          <p class="text-sm text-gray-500 mt-2">Generating script...</p>
+        </div>
+        <div x-show="!aiLoading" class="prose prose-sm max-w-none">
+          <div x-html="renderMd(scriptContent)" class="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed"></div>
+        </div>
+        <div x-show="!aiLoading && scriptContent" class="mt-4 flex gap-2">
+          <button @click="copyScript()" class="text-xs px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">📋 Copy All</button>
+          <button @click="showScript = false" class="text-xs px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div x-show="showHistory" x-cloak class="bg-white rounded-2xl border border-gray-200 p-6 mt-6 shadow-sm">
+      <h3 class="font-bold text-gray-900 mb-4">Past Jobs</h3>
+      <div x-show="history.length === 0" class="text-gray-400 text-sm">No past jobs yet.</div>
+      <div class="space-y-2">
+        <template x-for="job in history" :key="job.id">
+          <div @click="loadJob(job.id)"
+            class="flex items-center justify-between p-3 rounded-xl hover:bg-indigo-50 cursor-pointer border border-gray-100 transition-colors">
+            <div>
+              <span class="font-medium text-gray-800 text-sm" x-text="job.industry + ' in ' + job.city"></span>
+              <span class="text-xs text-gray-400 ml-2" x-text="formatDate(job.created_at)"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-500" x-text="(job.lead_count || 0) + ' leads'"></span>
+              <span class="text-xs px-2 py-0.5 rounded-full"
+                :class="job.status === 'completed' ? 'bg-green-100 text-green-700' : job.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'"
+                x-text="job.status"></span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- EMPTY / WELCOME STATE -->
+    <div x-show="leads.length === 0 && !loading && status !== 'processing'" class="text-center py-16">
+      <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">Ready to find clients</h3>
+      <p class="text-gray-500 text-sm max-w-md mx-auto mb-6">
+        Enter an industry and city above. The tool searches <strong>28 sources simultaneously</strong>
+        and highlights businesses with no website — your best prospects.
+      </p>
+      <div class="grid grid-cols-3 sm:grid-cols-7 gap-2 max-w-4xl mx-auto text-xs text-gray-500">
+        <template x-for="src in sources">
+          <div class="bg-white rounded-xl p-3 border border-gray-200 text-center">
+            <span x-text="src.icon" class="text-lg block mb-1"></span>
+            <span x-text="src.name" class="font-medium"></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function leadgen() {
+      return {
+        form: { industry: '', city: '' },
+        leads: [],
+        loading: false,
+        jobId: null,
+        pollTimer: null,
+        status: '',
+        showHistory: false,
+        history: [],
+        filterNoWebsite: false,
+        filterWithPhone: false,
+        showScript: false,
+        scriptContent: '',
+        aiLoading: false,
+
+        presets: [
+          { label: '🍽 Restaurant Mumbai', industry: 'restaurant', city: 'Mumbai' },
+          { label: '💪 Gym Delhi', industry: 'gym', city: 'Delhi' },
+          { label: '💇 Salon Bangalore', industry: 'salon', city: 'Bangalore' },
+          { label: '🦷 Dentist Pune', industry: 'dentist', city: 'Pune' },
+          { label: '☕ Cafe Hyderabad', industry: 'cafe', city: 'Hyderabad' },
+          { label: '🏨 Hotel Chennai', industry: 'hotel', city: 'Chennai' },
+          { label: '📚 Coaching Jaipur', industry: 'coaching', city: 'Jaipur' },
+          { label: '🛍 Clothing Shop Surat', industry: 'clothing', city: 'Surat' },
+        ],
+
+        sources: [
+          { name: 'OpenStreetMap', icon: '🗺', done: false },
+          { name: 'JustDial', icon: '📋', done: false },
+          { name: 'IndiaMART', icon: '🏭', done: false },
+          { name: 'Google Maps', icon: '📍', done: false },
+          { name: 'Google Ads', icon: '💰', done: false },
+          { name: 'Google SERP', icon: '🔍', done: false },
+          { name: 'Serper Maps', icon: '📌', done: false },
+          { name: 'Meta Ads', icon: '📣', done: false },
+          { name: 'Facebook', icon: '👥', done: false },
+          { name: 'Instagram', icon: '📸', done: false },
+          { name: 'LinkedIn', icon: '💼', done: false },
+          { name: 'YouTube', icon: '▶️', done: false },
+          { name: 'Leads Finder', icon: '🎯', done: false },
+          { name: 'Sulekha', icon: '🔧', done: false },
+          { name: 'TradeIndia', icon: '🤝', done: false },
+          { name: 'Yelp', icon: '⭐', done: false },
+          { name: 'TripAdvisor', icon: '✈️', done: false },
+          { name: 'Trustpilot', icon: '🛡', done: false },
+          { name: 'Clutch', icon: '🏢', done: false },
+          { name: 'Glassdoor', icon: '🚪', done: false },
+          { name: 'Zomato', icon: '🍽', done: false },
+          { name: 'Practo', icon: '🏥', done: false },
+          { name: 'Naukri', icon: '💼', done: false },
+          { name: 'Foursquare', icon: '📍', done: false },
+          { name: 'Bing Places', icon: '🅱️', done: false },
+          { name: 'MapMyIndia', icon: '🇮🇳', done: false },
+          { name: 'Google News', icon: '📰', done: false },
+          { name: 'Enrichment', icon: '✨', done: false },
+        ],
+
+        get filteredLeads() {
+          return this.leads.filter(l => {
+            if (this.filterNoWebsite && l.website) return false;
+            if (this.filterWithPhone && !l.phone) return false;
+            return true;
+          });
+        },
+        get noWebsiteCount() { return this.leads.filter(l => !l.website).length; },
+        get withPhoneCount() { return this.leads.filter(l => l.phone).length; },
+        get highScoreCount() { return this.leads.filter(l => l.score >= 70).length; },
+        get sourceBreakdown() {
+          const map = {};
+          for (const l of this.leads) map[l.source] = (map[l.source] || 0) + 1;
+          return Object.entries(map).sort((a, b) => b[1] - a[1]);
+        },
+
+        init() { this.loadHistory(); },
+
+        applyPreset(p) {
+          this.form.industry = p.industry;
+          this.form.city = p.city;
+        },
+
+        async generate() {
+          if (!this.form.industry.trim() || !this.form.city.trim()) {
+            alert('Please enter both industry and city.');
+            return;
+          }
+          this.leads = [];
+          this.loading = true;
+          this.status = 'pending';
+          this.sources.forEach(s => s.done = false);
+
+          try {
+            const res = await fetch('/api/generate-leads', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ industry: this.form.industry, city: this.form.city }),
+            });
+            const data = await res.json();
+            this.jobId = data.jobId;
+            this.pollStatus();
+          } catch (e) {
+            this.loading = false;
+            alert('Failed to connect to backend. Make sure the server is running on port 8001.');
+          }
+        },
+
+        pollStatus() {
+          if (this.pollTimer) clearInterval(this.pollTimer);
+          let ticks = 0;
+          this.pollTimer = setInterval(async () => {
+            ticks++;
+            // Animate source checkmarks progressively
+            const doneCount = Math.min(Math.floor(ticks * 1.5), this.sources.length);
+            for (let i = 0; i < doneCount; i++) this.sources[i].done = true;
+
+            try {
+              const res = await fetch(`/api/job-status/${this.jobId}`);
+              const data = await res.json();
+              this.status = data.status;
+
+              if (data.status === 'completed') {
+                clearInterval(this.pollTimer);
+                this.leads = data.leads || [];
+                this.loading = false;
+                this.sources.forEach(s => s.done = true);
+                this.loadHistory();
+              } else if (data.status === 'failed') {
+                clearInterval(this.pollTimer);
+                this.loading = false;
+                alert('Job failed. Check the server console for details.');
+              }
+            } catch (e) {
+              // Ignore transient errors
+            }
+          }, 2000);
+        },
+
+        async loadJob(jobId) {
+          const res = await fetch(`/api/job-status/${jobId}`);
+          const data = await res.json();
+          this.leads = data.leads || [];
+          this.form.industry = data.industry;
+          this.form.city = data.city;
+          this.jobId = jobId;
+          this.showHistory = false;
+        },
+
+        async loadHistory() {
+          try {
+            const res = await fetch('/api/past-jobs');
+            this.history = await res.json();
+          } catch (e) {}
+        },
+
+        async exportCSV() {
+          if (!this.jobId) return;
+          window.open(`/api/export-csv/${this.jobId}`, '_blank');
+        },
+
+        async markContacted(lead) {
+          await fetch(`/api/leads/${lead.id}/contacted`, { method: 'PATCH' });
+          lead.contacted = 1;
+        },
+
+        async getScript(lead) {
+          this.showScript = true;
+          this.aiLoading = true;
+          this.scriptContent = '';
+          try {
+            const res = await fetch(`/api/script/${lead.id}`);
+            const data = await res.json();
+            this.scriptContent = data.script || 'Failed to generate script.';
+          } catch (e) {
+            this.scriptContent = 'Error: Could not connect to AI. Check if Groq API key is set.';
+          }
+          this.aiLoading = false;
+        },
+
+        async getActionPlan() {
+          if (!this.jobId) return;
+          this.showScript = true;
+          this.aiLoading = true;
+          this.scriptContent = '';
+          try {
+            const res = await fetch(`/api/summary/${this.jobId}`);
+            const data = await res.json();
+            this.scriptContent = data.summary || 'Failed to generate plan.';
+          } catch (e) {
+            this.scriptContent = 'Error: Could not connect to AI.';
+          }
+          this.aiLoading = false;
+        },
+
+        copyScript() {
+          navigator.clipboard.writeText(this.scriptContent);
+          alert('Copied to clipboard!');
+        },
+
+        renderMd(text) {
+          if (!text) return '';
+          return text
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2 text-gray-900">$1</h2>')
+            .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2 text-gray-900">$1</h1>')
+            .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+            .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4"><b>$1.</b> $2</li>')
+            .replace(/\n/g, '<br>');
+        },
+
+        parseSignals(sigStr) {
+          if (!sigStr) return [];
+          try { return JSON.parse(sigStr); } catch { return sigStr.split(',').map(s => s.trim()).filter(Boolean); }
+        },
+
+        signalClass(sig) {
+          if (sig.includes('No Website')) return 'bg-green-100 text-green-700';
+          if (sig.includes('Phone')) return 'bg-blue-100 text-blue-700';
+          if (sig.includes('Email')) return 'bg-purple-100 text-purple-700';
+          if (sig.includes('High Rated')) return 'bg-amber-100 text-amber-700';
+          if (sig.includes('Ads')) return 'bg-red-100 text-red-700';
+          if (sig.includes('Hiring')) return 'bg-orange-100 text-orange-700';
+          if (sig.includes('IG-only')) return 'bg-pink-100 text-pink-700';
+          if (sig.includes('FB-only')) return 'bg-indigo-100 text-indigo-700';
+          if (sig.includes('LinkedIn')) return 'bg-sky-100 text-sky-700';
+          if (sig.includes('Naukri')) return 'bg-cyan-100 text-cyan-700';
+          if (sig.includes('Review')) return 'bg-yellow-100 text-yellow-700';
+          return 'bg-gray-100 text-gray-600';
+        },
+
+        sourceBadgeClass(source) {
+          const s = source.toLowerCase();
+          if (s.includes('justdial')) return 'bg-orange-100 text-orange-700';
+          if (s.includes('indiamart')) return 'bg-blue-100 text-blue-700';
+          if (s.includes('google maps') || s.includes('serper')) return 'bg-red-100 text-red-700';
+          if (s.includes('google ads') || s.includes('google serp')) return 'bg-rose-100 text-rose-700';
+          if (s.includes('openstreetmap')) return 'bg-green-100 text-green-700';
+          if (s.includes('meta ads')) return 'bg-indigo-100 text-indigo-700';
+          if (s.includes('facebook')) return 'bg-blue-100 text-blue-700';
+          if (s.includes('youtube')) return 'bg-red-100 text-red-700';
+          if (s.includes('instagram')) return 'bg-pink-100 text-pink-700';
+          if (s.includes('linkedin')) return 'bg-sky-100 text-sky-700';
+          if (s.includes('leads finder')) return 'bg-violet-100 text-violet-700';
+          if (s.includes('sulekha')) return 'bg-yellow-100 text-yellow-700';
+          if (s.includes('tradeindia')) return 'bg-teal-100 text-teal-700';
+          if (s.includes('yelp')) return 'bg-red-100 text-red-700';
+          if (s.includes('tripadvisor')) return 'bg-emerald-100 text-emerald-700';
+          if (s.includes('trustpilot')) return 'bg-green-100 text-green-700';
+          if (s.includes('clutch')) return 'bg-slate-100 text-slate-700';
+          if (s.includes('glassdoor')) return 'bg-lime-100 text-lime-700';
+          if (s.includes('zomato')) return 'bg-red-100 text-red-700';
+          if (s.includes('practo')) return 'bg-blue-100 text-blue-700';
+          if (s.includes('naukri')) return 'bg-cyan-100 text-cyan-700';
+          if (s.includes('foursquare')) return 'bg-purple-100 text-purple-700';
+          if (s.includes('bing')) return 'bg-sky-100 text-sky-700';
+          if (s.includes('mapmyindia') || s.includes('mappls')) return 'bg-orange-100 text-orange-700';
+          if (s.includes('news')) return 'bg-gray-100 text-gray-700';
+          if (s.includes('contact') || s.includes('enrich')) return 'bg-amber-100 text-amber-700';
+          return 'bg-gray-100 text-gray-600';
+        },
+
+        whatsappMsg(lead) {
+          return `Hi ${lead.name.split(' ')[0]},\n\nI noticed your business doesn't have a professional website yet. I build modern, mobile-friendly websites starting from ₹8,000 that help local businesses get more customers online.\n\nI'd love to show you a free mockup of how your site could look. Interested?\n\n— Ammar | AmmarBuilds.com`;
+        },
+
+        emailSubject(lead) {
+          return `Professional Website for ${lead.name} — Free Mockup`;
+        },
+
+        emailBody(lead) {
+          return `Hi ${lead.name.split(' ')[0]},\n\nI build modern websites for local businesses in ${lead.address || 'your area'} and noticed you don't have a professional site yet.\n\nA website helps you:\n✓ Get found on Google\n✓ Build trust with customers\n✓ Accept online bookings or orders\n\nI'd love to create a free mockup for ${lead.name} — no commitment needed.\n\nReply to this email or call me to chat.\n\nBest,\nAmmar\nAmmarBuilds.com\ncontact@forzeo.com`;
+        },
+
+        formatDate(iso) {
+          return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        },
+      };
+    }
+  </script>
+</body>
+</html>
