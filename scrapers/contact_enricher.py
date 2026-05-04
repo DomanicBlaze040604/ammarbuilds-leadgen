@@ -39,8 +39,8 @@ async def enrich_leads(leads_with_websites: List[Dict]) -> List[Dict]:
     if not urls:
         return leads_with_websites
 
-    # Limit to 20 URLs to stay within free tier
-    urls = urls[:20]
+    # Limit increased to 50 URLs to get more emails for international outreach
+    urls = urls[:50]
 
     run_input = {
         "startUrls": [{"url": u} for u in urls],
@@ -113,7 +113,7 @@ async def scrape_domains(domains: List[str]) -> List[Dict]:
     if not token:
         return []
 
-    urls = domains[:20]  # Limit for free tier
+    urls = domains[:50]  # Increased limit for more emails
 
     run_input = {
         "startUrls": [{"url": u} for u in urls],

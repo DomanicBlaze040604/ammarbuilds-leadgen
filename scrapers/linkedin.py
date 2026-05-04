@@ -158,4 +158,23 @@ async def scrape_employees(company_urls: List[str]) -> List[Dict]:
 # ─── Main entry point ───────────────────────────────────────
 async def scrape(industry: str, city: str) -> List[Dict]:
     """Main scraper: find companies hiring in industry+city via LinkedIn."""
-    return await scrape_jobs(industry, city)
+    jobs = await scrape_jobs(industry, city)
+    
+    # Extract company URLs to find employees/decision makers
+    company_urls = []
+    for job in jobs:
+        notes = job.get("notes", "")
+        # Very hacky extraction of the LinkedIn URL from notes
+        if "LinkedIn: " in notes:
+            parts = notes.split(" | ")
+            for p in parts:
+                if p.startswith("LinkedIn: "):
+                    url = p.replace("LinkedIn: ", "").strip()
+                    if url and url not in company_urls:
+                        company_urls.append(url)
+
+    employees = []
+    if company_urls:
+        employees = await scrape_employees(company_urls)
+        
+    return jobs + employees
